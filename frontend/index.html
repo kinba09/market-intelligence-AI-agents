@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MarketIntel AI App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Manrope:wght@400;500;700;800&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="blob-nav">
+        <h1>MarketIntel AI Software</h1>
+        <div class="actions">
+          <a href="/docs" target="_blank" rel="noreferrer">API Docs</a>
+          <a href="/" target="_blank" rel="noreferrer">API Root</a>
+        </div>
+      </div>
+      <p class="subtitle">
+        End-to-end market intelligence with Gemini + hybrid RAG + agent workflow.
+      </p>
+    </header>
+
+    <main class="layout">
+      <aside class="panel controls">
+        <h2>Controls</h2>
+
+        <section>
+          <h3>API Config</h3>
+          <label>
+            API Base URL
+            <input id="apiBase" type="text" value="/api" />
+          </label>
+        </section>
+
+        <section>
+          <h3>Add Watchlist Company</h3>
+          <label>Name <input id="cmpName" type="text" placeholder="OpenAI" /></label>
+          <label>Domain <input id="cmpDomain" type="text" placeholder="openai.com" /></label>
+          <button id="addWatchBtn">Add / Update</button>
+        </section>
+
+        <section>
+          <h3>Ingest URL</h3>
+          <label>URL <input id="ingestUrl" type="text" placeholder="https://example.com/news" /></label>
+          <label>Source Type
+            <select id="ingestType">
+              <option value="news">news</option>
+              <option value="company_site">company_site</option>
+              <option value="jobs">jobs</option>
+              <option value="social">social</option>
+              <option value="report">report</option>
+            </select>
+          </label>
+          <button id="ingestUrlBtn">Ingest URL</button>
+        </section>
+
+        <section>
+          <h3>Ingest RSS Feed</h3>
+          <label>Feed URL <input id="rssUrl" type="text" placeholder="https://example.com/rss.xml" /></label>
+          <label>Limit <input id="rssLimit" type="number" value="5" min="1" max="20" /></label>
+          <button id="ingestRssBtn">Ingest RSS</button>
+        </section>
+
+        <section>
+          <h3>Ask RAG Agent</h3>
+          <label>Question
+            <textarea id="question" rows="4" placeholder="What pricing changes did competitors announce in the last 30 days?"></textarea>
+          </label>
+          <button id="askBtn">Ask</button>
+        </section>
+
+        <section>
+          <h3>Generate Report</h3>
+          <label>Days <input id="reportDays" type="number" value="14" min="1" max="90" /></label>
+          <button id="reportBtn">Generate Competitor Summary</button>
+        </section>
+
+        <section>
+          <h3>Status</h3>
+          <pre id="status">Ready.</pre>
+        </section>
+      </aside>
+
+      <section class="content">
+        <article class="panel">
+          <h2>Watchlist</h2>
+          <ul id="watchlist"></ul>
+        </article>
+
+        <article class="panel">
+          <h2>Q&A Answer + Citations</h2>
+          <pre id="answer">No query yet.</pre>
+          <details>
+            <summary>Debug trace</summary>
+            <pre id="trace">No trace yet.</pre>
+          </details>
+          <div id="citations"></div>
+        </article>
+
+        <article class="grid-row">
+          <div class="panel">
+            <h2>Recent Events</h2>
+            <ul id="events"></ul>
+          </div>
+          <div class="panel">
+            <h2>Alerts</h2>
+            <ul id="alerts"></ul>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>Competitor Report</h2>
+          <pre id="report">No report yet.</pre>
+        </article>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

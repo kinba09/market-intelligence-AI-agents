@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Market Intelligence AI | System Design + Build Plan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Manrope:wght@400;500;600;700;800&family=Syne:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="nav-blob">
+        <a class="brand" href="#top">MarketIntel AI</a>
+        <nav>
+          <a href="#architecture">Architecture</a>
+          <a href="#rag">RAG</a>
+          <a href="#agents">Agents</a>
+          <a href="#implementation">Code</a>
+          <a href="#mvp">Roadmap</a>
+        </nav>
+        <a class="cta" href="#mvp">Build MVP</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero section reveal">
+        <div class="hero-copy">
+          <p class="eyebrow">Production Design Blueprint</p>
+          <h1>AI Market Intelligence,<br />end to end.</h1>
+          <p>
+            A full-stack system plan for ingesting market signals, extracting structured
+            intelligence, answering questions with citations, and running agentic monitoring
+            workflows for competitor tracking.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#architecture">Explore Architecture</a>
+            <a class="btn secondary" href="#implementation">View Implementation</a>
+          </div>
+        </div>
+
+        <div class="hero-illustration" aria-hidden="true">
+          <div class="blob blob-a"></div>
+          <div class="blob blob-b"></div>
+          <div class="panel main-panel">
+            <div class="line"></div>
+            <div class="line short"></div>
+            <div class="chart">
+              <span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="panel side-panel">
+            <div class="dot-row"><i></i><i></i><i></i></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line short"></div>
+          </div>
+          <div class="workflow">
+            <div class="node active">Ingest</div>
+            <div class="node">Extract</div>
+            <div class="node">Retrieve</div>
+            <div class="node">Reason</div>
+            <div class="node">Alert</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section operating reveal">
+        <div class="section-head">
+          <p class="eyebrow">Operating Model</p>
+          <h2>How this platform works in production</h2>
+          <p>
+            Same visual language as your references: soft pastel surfaces, outlined modules,
+            and a step-based model. Click each step to inspect architecture responsibilities.
+          </p>
+        </div>
+
+        <div class="op-tabs" role="tablist" aria-label="Operating model steps">
+          <button class="op-tab active" data-step="0">1. Unified ingestion</button>
+          <button class="op-tab" data-step="1">2. AI enrichment graph</button>
+          <button class="op-tab" data-step="2">3. Hybrid retrieval + RAG</button>
+          <button class="op-tab" data-step="3">4. Agentic monitoring + alerts</button>
+        </div>
+
+        <div class="op-panel-wrap">
+          <article class="op-panel active" data-panel="0">
+            <h3>Source connectors feed a normalized document stream</h3>
+            <p>
+              Pull data from RSS/news APIs, company websites, job boards, social APIs, and
+              report uploads. Every record is transformed to a canonical schema, deduplicated,
+              and versioned.
+            </p>
+            <ul>
+              <li>Batch: daily/hourly pulls for reports and site crawls</li>
+              <li>Near real time: webhook + streaming for high-value feeds</li>
+              <li>Store raw HTML/PDF/JSON in object storage for reprocessing</li>
+            </ul>
+          </article>
+
+          <article class="op-panel" data-panel="1">
+            <h3>AI enrichment converts text into structured intelligence</h3>
+            <p>
+              NLP pipelines detect companies, products, people, events, sentiment, and impact.
+              Entity linking maps mentions to canonical company IDs to avoid duplicates.
+            </p>
+            <ul>
+              <li>NER + relation extraction for who-did-what-when</li>
+              <li>Event taxonomy: funding, launch, pricing, hiring, partnerships</li>
+              <li>Importance scoring prioritizes analyst attention</li>
+            </ul>
+          </article>
+
+          <article class="op-panel" data-panel="2">
+            <h3>Q&A uses grounded retrieval with strict citation controls</h3>
+            <p>
+              Query understanding builds retrieval intents, then combines BM25 and vector search.
+              Results are reranked and passed to a constrained synthesis prompt.
+            </p>
+            <ul>
+              <li>Metadata filters: date, source quality, company, geography</li>
+              <li>Cross-encoder rerank improves precision@k</li>
+              <li>Every claim tied to source chunk IDs and links</li>
+            </ul>
+          </article>
+
+          <article class="op-panel" data-panel="3">
+            <h3>Agents monitor deltas and trigger scored alerts</h3>
+            <p>
+              Agents compare latest signals against baseline behavior. A rule + ML score gates
+              whether to send an alert, generate a brief, or wait for more evidence.
+            </p>
+            <ul>
+              <li>Detect pricing page changes with semantic diffs</li>
+              <li>Hiring spike alerts from role velocity anomalies</li>
+              <li>Daily/weekly digests with confidence and evidence</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="architecture" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">1. System Architecture</p>
+          <h2>End-to-end architecture and data flow</h2>
+          <p>Built for a solo builder: modular, practical, and production-minded.</p>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>High-level architecture</h3>
+            <pre class="ascii">
+[Sources]
+  |  News APIs | Web Crawlers | Job APIs | Social APIs | Reports(PDF)
+  v
+[Ingestion Layer]
+  - Airbyte/FastAPI connectors
+  - Playwright + Scrapy
+  - Kafka/Redis streams
+  v
+[Raw Storage]
+  - S3/MinIO (raw artifacts)
+  - Postgres (source metadata)
+  v
+[AI Enrichment Pipeline]
+  - Cleaning + dedupe + chunking
+  - NER + event extraction + sentiment
+  - Entity linking + importance scoring
+  v
+[Serving Stores]
+  - OpenSearch (BM25 + filters)
+  - Qdrant (vector index)
+  - Postgres (entities/events/relations)
+  v
+[Retrieval + RAG API]
+  - Query intent parsing
+  - Hybrid retrieval + rerank
+  - Citation-grounded answer generation
+  v
+[Agent Layer]
+  - Monitoring agents
+  - Alert policy engine
+  - Report synthesis agents
+  v
+[Output Layer]
+  - Web dashboard
+  - Slack/email alerts
+  - Scheduled competitor briefs
+            </pre>
+          </article>
+
+          <article class="card">
+            <h3>Data flow (request + background)</h3>
+            <pre class="ascii">
+A) Background Intelligence Loop
+Ingest -> Normalize -> Enrich -> Index -> Score -> Alert candidates
+
+B) User Q&A Loop
+Question -> Query Understanding -> Hybrid Retrieve -> Rerank
+-> Grounded Prompt -> Answer + Citations
+
+C) Monitoring Loop
+Watchlist Company -> Delta Detection -> Confidence Score
+-> Trigger Policy -> Alert or Hold -> Daily Summary
+            </pre>
+            <p>
+              Key design choice: separate <strong>raw artifact storage</strong> from
+              <strong>derived intelligence</strong> so you can re-run extraction models when prompts
+              or taxonomies improve.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="stack" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">2. Tech Stack</p>
+          <h2>Concrete stack recommendations</h2>
+        </div>
+
+        <div class="stack-grid">
+          <article class="card chip-card">
+            <h3>Ingestion</h3>
+            <div class="chips">
+              <span>Playwright</span>
+              <span>Scrapy</span>
+              <span>Newscatcher API</span>
+              <span>RSS + Sitemap</span>
+              <span>Apify actors</span>
+              <span>Airbyte</span>
+            </div>
+            <p>Start with API-first connectors, use crawling only when APIs are absent.</p>
+          </article>
+
+          <article class="card chip-card">
+            <h3>Storage</h3>
+            <div class="chips">
+              <span>PostgreSQL</span>
+              <span>Qdrant</span>
+              <span>OpenSearch</span>
+              <span>S3/MinIO</span>
+              <span>Redis</span>
+            </div>
+            <p>Postgres as system-of-record, Qdrant for vectors, OpenSearch for lexical + filters.</p>
+          </article>
+
+          <article class="card chip-card">
+            <h3>AI + Retrieval</h3>
+            <div class="chips">
+              <span>sentence-transformers</span>
+              <span>bge-large-en-v1.5</span>
+              <span>Cohere rerank</span>
+              <span>Cross-encoder reranker</span>
+              <span>Instructor-xl (optional)</span>
+            </div>
+            <p>Hybrid retrieval with rerank gives the best accuracy/cost balance for MVP.</p>
+          </article>
+
+          <article class="card chip-card">
+            <h3>Orchestration + Agents</h3>
+            <div class="chips">
+              <span>LangGraph</span>
+              <span>FastAPI</span>
+              <span>Celery</span>
+              <span>Prefect (optional)</span>
+              <span>Pydantic</span>
+            </div>
+            <p>LangGraph for deterministic agent state machines; Celery for async jobs.</p>
+          </article>
+
+          <article class="card chip-card">
+            <h3>Frontend + Product</h3>
+            <div class="chips">
+              <span>Next.js</span>
+              <span>Tailwind or CSS modules</span>
+              <span>Recharts</span>
+              <span>Auth.js</span>
+              <span>Vercel or Fly.io</span>
+            </div>
+            <p>For this portfolio page: static HTML/CSS/JS; for app MVP: Next.js + FastAPI backend.</p>
+          </article>
+
+          <article class="card chip-card">
+            <h3>Observability</h3>
+            <div class="chips">
+              <span>OpenTelemetry</span>
+              <span>Prometheus</span>
+              <span>Grafana</span>
+              <span>Langfuse</span>
+              <span>Sentry</span>
+            </div>
+            <p>Track retrieval hit rate, latency, and hallucination incidents continuously.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="rag" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">3. RAG Design</p>
+          <h2>Grounded answers with hybrid retrieval</h2>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>Chunking strategy</h3>
+            <ul>
+              <li>Primary chunk size: 500-800 tokens with 80-token overlap.</li>
+              <li>Semantic boundaries: split by heading/section before token slicing.</li>
+              <li>Metadata-aware chunks include `source_type`, `company_id`, `published_at`, `language`, `confidence`.</li>
+              <li>Special handling for tables and pricing pages: preserve row/field context.</li>
+            </ul>
+            <h4>Why this works</h4>
+            <p>
+              Semantic-first chunking reduces context fragmentation, while metadata enables high-precision
+              filtering for analyst-grade responses.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Hybrid retrieval formula</h3>
+            <pre><code>final_score = 0.45 * bm25_norm + 0.45 * vector_cosine + 0.10 * freshness_boost</code></pre>
+            <ul>
+              <li>Retrieve top 40 BM25 + top 40 vector results.</li>
+              <li>Deduplicate by `chunk_id`, then merge scores.</li>
+              <li>Rerank top 40 with a cross-encoder, keep top 8-12 context chunks.</li>
+            </ul>
+            <h4>Prompt template (grounded)</h4>
+            <pre><code>SYSTEM: You are a market intelligence analyst.
+Use only provided evidence. If evidence is insufficient, say so.
+Return JSON: {answer, confidence, citations[]}.
+
+USER QUESTION: {question}
+EVIDENCE:
+{top_chunks_with_source_ids}
+
+RULES:
+- Every major claim needs at least one citation ID.
+- No external knowledge.
+- Prefer recent evidence when conflicts exist.</code></pre>
+          </article>
+        </div>
+      </section>
+
+      <section id="agents" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">4. Agent Design</p>
+          <h2>Multi-agent workflow with strict handoffs</h2>
+        </div>
+
+        <article class="card">
+          <h3>Agent graph</h3>
+          <pre class="ascii">
+[Query Understanding Agent]
+  input: user question
+  output: intent, entities, filters, answer_type
+        |
+        v
+[Retrieval Agent]
+  tools: search_bm25, search_vector, fetch_document
+  output: candidate_chunks + ranking_features
+        |
+        v
+[Validation Agent]
+  tasks: contradiction check, source diversity, evidence sufficiency
+  output: validated_context or follow-up question
+        |
+        v
+[Synthesis Agent]
+  tasks: produce final answer, citations, confidence, action items
+  output: analyst-ready response JSON
+          </pre>
+
+          <h3>Tool-calling contract</h3>
+          <ul>
+            <li>All tool inputs/outputs are Pydantic models for reliability.</li>
+            <li>Agent state persisted as JSON in Redis/Postgres for replay/debugging.</li>
+            <li>Validation agent can reject synthesis if citations are weak.</li>
+            <li>Fallback mode returns "insufficient evidence" instead of guessing.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section id="pipeline" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">5. Data Pipeline</p>
+          <h2>Raw content to structured intelligence</h2>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>Pipeline stages</h3>
+            <ol>
+              <li>Ingest raw artifact + metadata capture.</li>
+              <li>Normalize text (boilerplate removal, language detect).</li>
+              <li>Deduplicate by URL fingerprint + semantic near-duplicate check.</li>
+              <li>Entity extraction (company, product, role, region, person).</li>
+              <li>Event detection (funding, launch, pricing, hiring, partnership).</li>
+              <li>Sentiment + stance classification (positive/neutral/negative).</li>
+              <li>Importance scoring and watchlist matching.</li>
+              <li>Write document/chunks/events to serving stores.</li>
+            </ol>
+          </article>
+
+          <article class="card">
+            <h3>Importance scoring heuristic</h3>
+            <pre><code>importance =
+  0.35 * source_credibility
++ 0.25 * event_severity
++ 0.20 * watchlist_match
++ 0.10 * social_velocity
++ 0.10 * novelty</code></pre>
+            <p>
+              Use this heuristic initially, then replace with a learned ranking model once you have
+              analyst feedback labels.
+            </p>
+            <h4>Event schema (example)</h4>
+            <pre><code>{
+  "event_id": "evt_01",
+  "company_id": "cmp_openai",
+  "event_type": "pricing_change",
+  "event_time": "2026-04-18T08:30:00Z",
+  "sentiment": "neutral",
+  "importance": 0.83,
+  "evidence_chunk_ids": ["chk_10", "chk_11"],
+  "summary": "Enterprise plan introduced usage cap tiers."
+}</code></pre>
+          </article>
+        </div>
+      </section>
+
+      <section id="alerts" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">6. Alert System</p>
+          <h2>Real-time competitive signal detection</h2>
+        </div>
+
+        <article class="card">
+          <h3>Trigger families</h3>
+          <div class="grid three">
+            <div class="mini-card">
+              <h4>Competitor changes</h4>
+              <p>Pricing page diff, product page changelog, docs updates, roadmap shifts.</p>
+            </div>
+            <div class="mini-card">
+              <h4>Funding signals</h4>
+              <p>Press release + SEC filing + investor post triangulation for confidence.</p>
+            </div>
+            <div class="mini-card">
+              <h4>Hiring spikes</h4>
+              <p>Role velocity anomalies by team/location over 14-day baseline.</p>
+            </div>
+          </div>
+
+          <h3>Alert policy logic</h3>
+          <pre><code>if importance >= 0.75 and confidence >= 0.70 and sources >= 2:
+    send_alert(channel="slack", priority="high")
+elif importance >= 0.60 and confidence >= 0.55:
+    queue_digest(priority="medium")
+else:
+    hold_for_more_evidence()</code></pre>
+
+          <p>
+            Add cooldown windows to suppress duplicate alerts for the same company + event type
+            within a configurable period (e.g., 6 hours).
+          </p>
+        </article>
+      </section>
+
+      <section id="database" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">7. Database Design</p>
+          <h2>Schemas and indexing strategy</h2>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>Core tables</h3>
+            <pre><code>companies(
+  id PK, name, domain, industry, headquarters,
+  watchlist_tier, created_at, updated_at
+)
+
+documents(
+  id PK, source_url, source_type, title,
+  raw_object_key, published_at, language,
+  hash, ingestion_time
+)
+
+chunks(
+  id PK, document_id FK, chunk_index,
+  text, token_count, embedding_id,
+  company_ids[], event_tags[], created_at
+)
+
+events(
+  id PK, company_id FK, event_type,
+  event_time, sentiment, importance,
+  summary, evidence_chunk_ids[], created_at
+)</code></pre>
+          </article>
+
+          <article class="card">
+            <h3>Indexing plan</h3>
+            <ul>
+              <li>`documents(source_url)` unique index for dedupe.</li>
+              <li>`documents(published_at DESC)` for recency retrieval.</li>
+              <li>`events(company_id, event_time DESC)` for timelines.</li>
+              <li>`events(event_type, importance DESC)` for alerts.</li>
+              <li>OpenSearch index on `chunks.text` with BM25 + metadata facets.</li>
+              <li>Qdrant payload filters on company IDs, date, source type.</li>
+            </ul>
+            <p>
+              Keep high-volume text in OpenSearch/Qdrant and use Postgres for relational truth.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="implementation" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">8. Sample Implementation</p>
+          <h2>Python snippets you can run and extend</h2>
+        </div>
+
+        <article class="card code-block">
+          <h3>8.1 Ingestion pipeline (FastAPI + async fetch)</h3>
+          <pre><code class="language-python">from fastapi import FastAPI
+from pydantic import BaseModel
+import httpx
+from datetime import datetime
+
+app = FastAPI()
+
+class IngestRequest(BaseModel):
+    url: str
+    source_type: str
+
+async def fetch_html(url: str) -> str:
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        r = await client.get(url)
+        r.raise_for_status()
+        return r.text
+
+@app.post("/ingest")
+async def ingest(req: IngestRequest):
+    html = await fetch_html(req.url)
+    # TODO: clean_text, extract metadata, dedupe hash
+    doc = {
+        "source_url": req.url,
+        "source_type": req.source_type,
+        "raw_html": html,
+        "ingested_at": datetime.utcnow().isoformat()
+    }
+    # TODO: write raw artifact to S3 + metadata to Postgres
+    return {"status": "queued", "document": doc}</code></pre>
+        </article>
+
+        <article class="card code-block">
+          <h3>8.2 Embeddings + Qdrant upsert</h3>
+          <pre><code class="language-python">from sentence_transformers import SentenceTransformer
+from qdrant_client import QdrantClient
+from qdrant_client.models import PointStruct
+
+model = SentenceTransformer("BAAI/bge-large-en-v1.5")
+qdrant = QdrantClient(url="http://localhost:6333")
+
+
+def upsert_chunks(chunks):
+    texts = [c["text"] for c in chunks]
+    vectors = model.encode(texts, normalize_embeddings=True)
+
+    points = []
+    for c, v in zip(chunks, vectors):
+        points.append(
+            PointStruct(
+                id=c["chunk_id"],
+                vector=v.tolist(),
+                payload={
+                    "document_id": c["document_id"],
+                    "company_ids": c.get("company_ids", []),
+                    "published_at": c.get("published_at"),
+                    "source_type": c.get("source_type")
+                }
+            )
+        )
+
+    qdrant.upsert(collection_name="market_chunks", points=points)</code></pre>
+        </article>
+
+        <article class="card code-block">
+          <h3>8.3 Hybrid retrieval + simple RAG</h3>
+          <pre><code class="language-python">def hybrid_retrieve(question, bm25_client, qdrant_client, embed_fn, k=40):
+    bm25_hits = bm25_client.search(question, top_k=k)
+    vec = embed_fn(question)
+    vec_hits = qdrant_client.search(
+        collection_name="market_chunks",
+        query_vector=vec,
+        limit=k
+    )
+
+    # score fusion
+    scores = {}
+    for h in bm25_hits:
+        scores[h.id] = scores.get(h.id, 0) + 0.45 * h.norm_score
+    for h in vec_hits:
+        scores[h.id] = scores.get(h.id, 0) + 0.45 * h.score
+
+    ranked_ids = sorted(scores, key=scores.get, reverse=True)[:40]
+    return ranked_ids
+
+
+def answer_with_citations(question, retriever, llm, chunk_store):
+    ids = retriever(question)
+    context = [chunk_store[i] for i in ids[:10]]
+    prompt = f"""
+Use only evidence below. Attach citation IDs for every key claim.
+Question: {question}
+Evidence:\n{context}
+Output JSON: {{"answer": str, "citations": list[str], "confidence": float}}
+"""
+    return llm.invoke(prompt)</code></pre>
+        </article>
+
+        <article class="card code-block">
+          <h3>8.4 Basic agent loop (LangGraph-style pseudocode)</h3>
+          <pre><code class="language-python">from pydantic import BaseModel
+
+class AgentState(BaseModel):
+    question: str
+    intent: dict | None = None
+    retrieved: list | None = None
+    validated: list | None = None
+    answer: dict | None = None
+
+
+def query_understanding(state: AgentState):
+    state.intent = {"entities": [], "time_window": "90d", "type": "analysis"}
+    return state
+
+
+def retrieve(state: AgentState):
+    state.retrieved = hybrid_retrieve(state.question, bm25, qdrant, embed)
+    return state
+
+
+def validate(state: AgentState):
+    state.validated = state.retrieved[:10]  # add contradiction/evidence checks
+    return state
+
+
+def synthesize(state: AgentState):
+    state.answer = answer_with_citations(state.question, lambda q: state.validated, llm, chunks)
+    return state</code></pre>
+        </article>
+      </section>
+
+      <section id="evaluation" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">9. Evaluation</p>
+          <h2>How to measure quality before scaling</h2>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>Retrieval metrics</h3>
+            <ul>
+              <li>nDCG@10 for ranking quality.</li>
+              <li>MRR for first-relevant-chunk position.</li>
+              <li>Recall@20 against labeled evidence sets.</li>
+              <li>Latency p50/p95 for retrieval and full answer pipeline.</li>
+            </ul>
+            <h4>Protocol</h4>
+            <p>
+              Build a benchmark of ~150 real analyst questions with gold citations. Run nightly and
+              compare against previous prompt/model settings.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Answer quality metrics</h3>
+            <ul>
+              <li>Faithfulness: percent of claims supported by cited chunks.</li>
+              <li>Groundedness: no unsupported statements.</li>
+              <li>Citation precision: cited chunks directly justify the claim.</li>
+              <li>Analyst utility rating (1-5) for report usefulness.</li>
+            </ul>
+            <h4>Practical test harness</h4>
+            <pre><code>pytest tests/evals/test_retrieval.py
+pytest tests/evals/test_grounded_answers.py
+python scripts/run_eval_dashboard.py</code></pre>
+          </article>
+        </div>
+      </section>
+
+      <section id="mvp" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">10. MVP Plan</p>
+          <h2>Build order for 1-2 weeks, then scale</h2>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>Week 1-2 (high-impact MVP)</h3>
+            <ol>
+              <li>Ingest 3 sources: news API, company websites, job postings.</li>
+              <li>Store raw docs + metadata in Postgres and object storage.</li>
+              <li>Chunk + embed + index in OpenSearch and Qdrant.</li>
+              <li>Ship Q&A API with citations and confidence score.</li>
+              <li>Launch dashboard with company watchlist + recent events.</li>
+              <li>Add one alert type: pricing page change.</li>
+            </ol>
+            <p>
+              Goal: prove end-to-end loop works reliably and is demo-ready for recruiters.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Scaling roadmap (later)</h3>
+            <ol>
+              <li>Add more connectors (social, earnings calls, app reviews).</li>
+              <li>Train event ranking using analyst feedback.</li>
+              <li>Expand agents for auto-generated competitor briefs.</li>
+              <li>Add multi-tenant auth, billing, and usage controls.</li>
+              <li>Implement robust monitoring, caching, and cost optimization.</li>
+              <li>Introduce human-in-the-loop review queues for critical alerts.</li>
+            </ol>
+            <p>
+              This progression keeps complexity proportional to traction while preserving a
+              production path.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section final-note reveal">
+        <article class="card">
+          <h2>Portfolio positioning</h2>
+          <p>
+            Present this as a practical AI systems project: deterministic data engineering + LLM
+            reasoning + measurable retrieval quality. Recruiters care most about grounded outputs,
+            clear architecture, and evaluation discipline.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#top">Back to Top</a>
+            <a class="btn secondary" href="#implementation">Start Coding</a>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Market Intelligence AI Design Doc • Built for portfolio-grade execution</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
