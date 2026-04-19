@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.auth import get_current_user
 from app.core.container import get_services
 from app.core.database import get_db
-from app.models.entities import Alert, Event
+from app.models.entities import Alert, Event, User
 from app.schemas.api import (
     AlertOut,
     CompetitorReportRequest,
@@ -26,9 +28,15 @@ def list_events(
     days: int = 14,
     limit: int = 100,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> list[EventOut]:
     cutoff = datetime.utcnow() - timedelta(days=max(1, min(days, 120)))
-    stmt = select(Event).where(Event.event_time >= cutoff).order_by(Event.event_time.desc()).limit(max(1, min(limit, 500)))
+    stmt = (
+        select(Event)
+        .where(Event.user_id == current_user.id, Event.event_time >= cutoff)
+        .order_by(Event.event_time.desc())
+        .limit(max(1, min(limit, 500)))
+    )
     if company_id:
         stmt = stmt.where(Event.company_id == company_id)
     rows = db.execute(stmt).scalars().all()
@@ -53,9 +61,15 @@ def list_alerts(
     days: int = 7,
     limit: int = 100,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> list[AlertOut]:
     cutoff = datetime.utcnow() - timedelta(days=max(1, min(days, 120)))
-    stmt = select(Alert).where(Alert.created_at >= cutoff).order_by(Alert.created_at.desc()).limit(max(1, min(limit, 500)))
+    stmt = (
+        select(Alert)
+        .where(Alert.user_id == current_user.id, Alert.created_at >= cutoff)
+        .order_by(Alert.created_at.desc())
+        .limit(max(1, min(limit, 500)))
+    )
     if company_id:
         stmt = stmt.where(Alert.company_id == company_id)
     rows = db.execute(stmt).scalars().all()
@@ -77,10 +91,16 @@ def list_alerts(
 
 
 @router.post("/alerts/evaluate")
-def evaluate_recent_alerts(db: Session = Depends(get_db)) -> dict:
+def evaluate_recent_alerts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
     services = get_services()
     events = db.execute(
-        select(Event).where(Event.created_at >= datetime.utcnow() - timedelta(hours=2))
+        select(Event).where(
+            Event.user_id == current_user.id,
+            Event.created_at >= datetime.utcnow() - timedelta(hours=2),
+        )
     ).scalars().all()
     alerts = services.alerts.evaluate_and_create_alerts(db, events)
     db.commit()
@@ -88,7 +108,21 @@ def evaluate_recent_alerts(db: Session = Depends(get_db)) -> dict:
 
 
 @router.post("/reports/competitor-summary", response_model=CompetitorReportResponse)
-def competitor_summary(req: CompetitorReportRequest, db: Session = Depends(get_db)) -> CompetitorReportResponse:
+def competitor_summary(
+    req: CompetitorReportRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> CompetitorReportResponse:
     services = get_services()
-    report = services.reports.competitor_summary(db, req.company_ids, req.days)
-    return CompetitorReportResponse(report_markdown=report, generated_at=datetime.utcnow())
+    llm_cfg = services.llm_config.get_default_runtime_config(db, current_user.id)
+    trace_id = f"rpt_{uuid4().hex[:12]}"
+    report = services.reports.competitor_summary(
+        db,
+        current_user.id,
+        req.company_ids,
+        days=req.days,
+        llm_config=llm_cfg,
+        trace_id=trace_id,
+    )
+    db.commit()
+    return CompetitorReportResponse(report_markdown=report, generated_at=datetime.utcnow(), trace_id=trace_id)

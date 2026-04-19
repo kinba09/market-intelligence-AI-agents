@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from app.services.llm_service import LLMService
+from app.services.llm_config_service import RuntimeLLMConfig
+from app.services.llm_service import LLMRunContext, LLMService
 from app.services.text_utils import keyword_hits, parse_possible_date
 
 
@@ -47,7 +48,15 @@ class EnrichmentService:
     def __init__(self, llm: LLMService) -> None:
         self.llm = llm
 
-    def extract(self, text: str, source_type: str, title: str | None = None) -> dict[str, Any]:
+    def extract(
+        self,
+        text: str,
+        source_type: str,
+        *,
+        title: str | None = None,
+        llm_config: RuntimeLLMConfig | None = None,
+        run_ctx: LLMRunContext | None = None,
+    ) -> dict[str, Any]:
         excerpt = text[:8000]
         system_prompt = (
             "You are an information extraction engine for market intelligence. "
@@ -62,7 +71,13 @@ class EnrichmentService:
             "events": [],
             "sentiment": "neutral",
         }
-        llm_payload = self.llm.generate_json(system_prompt, user_prompt, fallback=fallback)
+        llm_payload = self.llm.generate_json(
+            system_prompt,
+            user_prompt,
+            fallback=fallback,
+            llm_config=llm_config,
+            run_ctx=run_ctx,
+        )
 
         events = self._coerce_events(llm_payload.get("events", []), source_type)
         if not events:
@@ -105,8 +120,6 @@ class EnrichmentService:
         source_credibility = SOURCE_CREDIBILITY.get(source_type, 0.6)
         event_severity = EVENT_SEVERITY.get(event_type, 0.6)
 
-        # from architecture doc formula:
-        # 0.35*cred + 0.25*severity + 0.20*watchlist + 0.10*social + 0.10*novelty
         score = (
             0.35 * source_credibility
             + 0.25 * event_severity

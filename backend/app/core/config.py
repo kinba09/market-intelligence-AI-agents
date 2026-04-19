@@ -1,4 +1,5 @@
 from functools import lru_cache
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -9,6 +10,9 @@ class Settings(BaseSettings):
     app_name: str = "Market Intelligence AI"
     app_env: str = "dev"
     api_prefix: str = "/api"
+
+    app_secret_key: str = "change-this-secret-key"
+    access_token_expire_minutes: int = 60 * 24 * 7
 
     database_url: str = "postgresql+psycopg2://market:market@localhost:5432/market_intel"
     redis_url: str = "redis://localhost:6379/0"
@@ -38,6 +42,8 @@ class Settings(BaseSettings):
     alert_confidence_high: float = 0.70
     alert_importance_medium: float = 0.60
     alert_confidence_medium: float = 0.55
+
+    scheduler_interval_minutes: int = 30
 
 
 @lru_cache(maxsize=1)

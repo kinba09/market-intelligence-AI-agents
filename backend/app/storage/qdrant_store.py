@@ -35,6 +35,7 @@ class QdrantStore:
             payload = {
                 "chunk_id": rec["chunk_id"],
                 "document_id": rec["document_id"],
+                "user_id": rec.get("user_id"),
                 "company_ids": rec.get("company_ids", []),
                 "source_type": rec.get("source_type"),
                 "published_at": rec.get("published_at"),
@@ -46,6 +47,8 @@ class QdrantStore:
 
     def search(self, query_vector: list[float], filters: dict[str, Any], limit: int = 40) -> list[dict[str, Any]]:
         must = []
+        if user_id := filters.get("user_id"):
+            must.append(FieldCondition(key="user_id", match=MatchAny(any=[user_id])))
         if company_ids := filters.get("company_ids"):
             must.append(FieldCondition(key="company_ids", match=MatchAny(any=company_ids)))
         if source_types := filters.get("source_types"):

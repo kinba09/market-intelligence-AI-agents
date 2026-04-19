@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MarketIntel AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Manrope:wght@400;500;700;800&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body data-page="landing">
+    <header class="topbar topbar-landing">
+      <div class="blob-nav">
+        <h1>MarketIntel AI</h1>
+        <div class="actions">
+          <a href="/login">Login</a>
+          <a href="/docs" target="_blank" rel="noreferrer">API Docs</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="landing-wrap">
+      <section class="landing-hero panel">
+        <p class="eyebrow">Free-first AI market intelligence software</p>
+        <h2>Autonomous daily research, grounded RAG answers, and alerting.</h2>
+        <p>
+          Track competitors automatically from news, websites, job posts, and reports. Ask questions in natural
+          language with citations. Plug in your own Gemini or any LLM key + model name.
+        </p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="/login">Get Started</a>
+          <a class="btn-secondary" href="/docs" target="_blank" rel="noreferrer">Explore API</a>
+        </div>
+      </section>
+
+      <section class="landing-grid">
+        <article class="panel">
+          <h3>What it does</h3>
+          <ul>
+            <li>Ingest URLs, RSS feeds, and reports</li>
+            <li>Extract entities, events, sentiment, importance</li>
+            <li>Hybrid retrieval (BM25 + vectors) for grounded RAG</li>
+            <li>Daily monitors that run automatically</li>
+            <li>Alerts and competitor summaries</li>
+          </ul>
+        </article>
+        <article class="panel">
+          <h3>Guardrails + LLMOps</h3>
+          <ul>
+            <li>Prompt-injection checks on questions</li>
+            <li>Citation-required grounded responses</li>
+            <li>Structured LLM run logs (latency, errors, model)</li>
+            <li>Workflow logs for scheduled agent runs</li>
+          </ul>
+        </article>
+        <article class="panel">
+          <h3>Bring your own model key</h3>
+          <ul>
+            <li>Gemini free key from AI Studio</li>
+            <li>Other providers via LiteLLM-compatible model names</li>
+            <li>Per-user keys encrypted at rest</li>
+          </ul>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

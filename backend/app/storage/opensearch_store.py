@@ -30,6 +30,7 @@ class OpenSearchStore:
                 "properties": {
                     "chunk_id": {"type": "keyword"},
                     "document_id": {"type": "keyword"},
+                    "user_id": {"type": "keyword"},
                     "text": {"type": "text"},
                     "title": {"type": "text"},
                     "source_url": {"type": "keyword"},
@@ -54,6 +55,8 @@ class OpenSearchStore:
 
         if company_ids := filters.get("company_ids"):
             flt.append({"terms": {"company_ids": company_ids}})
+        if user_id := filters.get("user_id"):
+            flt.append({"term": {"user_id": user_id}})
         if source_types := filters.get("source_types"):
             flt.append({"terms": {"source_type": source_types}})
         if date_from := filters.get("date_from"):

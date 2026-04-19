@@ -13,6 +13,8 @@ from app.schemas.api import IngestResponse, IngestURLRequest
 from app.services.alert_service import AlertService
 from app.services.embedding_service import EmbeddingService
 from app.services.enrichment_service import EnrichmentService
+from app.services.llm_config_service import RuntimeLLMConfig
+from app.services.llm_service import LLMRunContext
 from app.services.text_utils import estimate_tokens, extract_html_content, fingerprint_text, semantic_chunk
 from app.storage.object_store import ObjectStore
 from app.storage.opensearch_store import OpenSearchStore
@@ -37,7 +39,15 @@ class IngestionService:
         self.enrichment = enrichment
         self.alerts = alerts
 
-    async def ingest_url(self, db: Session, req: IngestURLRequest) -> IngestResponse:
+    async def ingest_url(
+        self,
+        db: Session,
+        req: IngestURLRequest,
+        *,
+        user_id: str,
+        llm_config: RuntimeLLMConfig | None = None,
+        trace_id: str | None = None,
+    ) -> IngestResponse:
         url = str(req.url)
         html = await self._fetch_html(url)
         title, text = extract_html_content(html)
@@ -46,7 +56,7 @@ class IngestionService:
 
         text_hash = fingerprint_text(text)
         existing = db.execute(
-            select(Document).where(Document.source_url == url, Document.hash == text_hash)
+            select(Document).where(Document.source_url == url, Document.hash == text_hash, Document.user_id == user_id)
         ).scalar_one_or_none()
         if existing:
             return IngestResponse(
@@ -56,10 +66,11 @@ class IngestionService:
                 events_created=0,
             )
 
-        company = self._resolve_company(db, req.company_name, req.company_domain, url)
+        company = self._resolve_company(db, user_id, req.company_name, req.company_domain, url)
         raw_key = self.object_store.put_raw_html(url, html)
 
         document = Document(
+            user_id=user_id,
             source_url=url,
             source_type=req.source_type,
             title=title,
@@ -76,6 +87,7 @@ class IngestionService:
         chunk_rows: list[Chunk] = []
         for idx, chunk_text in enumerate(chunks):
             row = Chunk(
+                user_id=user_id,
                 document_id=document.id,
                 chunk_index=idx,
                 text=chunk_text,
@@ -93,13 +105,14 @@ class IngestionService:
 
         db.flush()
 
-        vectors = self.embedding.embed_documents([c.text for c in chunk_rows])
+        vectors = self.embedding.embed_documents([c.text for c in chunk_rows], llm_config=llm_config)
         index_records = []
         for c in chunk_rows:
             index_records.append(
                 {
                     "chunk_id": c.id,
                     "document_id": c.document_id,
+                    "user_id": user_id,
                     "text": c.text,
                     "title": title,
                     "source_url": url,
@@ -119,10 +132,17 @@ class IngestionService:
         except Exception:
             pass
 
-        enrich = self.enrichment.extract(text, req.source_type, title=title)
+        enrich = self.enrichment.extract(
+            text,
+            req.source_type,
+            title=title,
+            llm_config=llm_config,
+            run_ctx=LLMRunContext(db=db, user_id=user_id, trace_id=trace_id, endpoint="ingest_enrich"),
+        )
         event_rows: list[Event] = []
         for ev in enrich.get("events", []):
             event = Event(
+                user_id=user_id,
                 company_id=company.id if company else None,
                 document_id=document.id,
                 event_type=ev["event_type"],
@@ -151,7 +171,16 @@ class IngestionService:
             events_created=len(event_rows),
         )
 
-    async def ingest_rss(self, db: Session, feed_url: str, source_type: str, limit: int) -> dict:
+    async def ingest_rss(
+        self,
+        db: Session,
+        feed_url: str,
+        source_type: str,
+        limit: int,
+        *,
+        user_id: str,
+        llm_config: RuntimeLLMConfig | None = None,
+    ) -> dict:
         parsed = feedparser.parse(feed_url)
         results = []
         for entry in parsed.entries[:limit]:
@@ -159,8 +188,15 @@ class IngestionService:
             if not link:
                 continue
             req = IngestURLRequest(url=link, source_type=source_type)
+            trace_id = f"rss_{abs(hash(link))}_{int(datetime.utcnow().timestamp())}"
             try:
-                result = await self.ingest_url(db, req)
+                result = await self.ingest_url(
+                    db,
+                    req,
+                    user_id=user_id,
+                    llm_config=llm_config,
+                    trace_id=trace_id,
+                )
                 results.append({"url": link, "status": result.status, "document_id": result.document_id})
             except Exception as exc:
                 results.append({"url": link, "status": f"failed: {exc}"})
@@ -170,21 +206,25 @@ class IngestionService:
         self,
         db: Session,
         *,
+        user_id: str,
         file_name: str,
         data: bytes,
         source_type: str,
         company_name: str | None = None,
         company_domain: str | None = None,
+        llm_config: RuntimeLLMConfig | None = None,
+        trace_id: str | None = None,
     ) -> IngestResponse:
         text = data.decode("utf-8", errors="ignore")
         if len(text.strip()) < 120:
             raise ValueError("Uploaded report has insufficient text content")
 
         raw_key = self.object_store.put_raw_bytes(file_name, data, content_type="application/octet-stream")
-        company = self._resolve_company(db, company_name, company_domain, source_url=f"upload://{file_name}")
+        company = self._resolve_company(db, user_id, company_name, company_domain, source_url=f"upload://{file_name}")
 
         text_hash = fingerprint_text(text)
         document = Document(
+            user_id=user_id,
             source_url=f"upload://{file_name}",
             source_type=source_type,
             title=file_name,
@@ -201,6 +241,7 @@ class IngestionService:
         chunk_rows: list[Chunk] = []
         for idx, chunk_text in enumerate(chunks):
             row = Chunk(
+                user_id=user_id,
                 document_id=document.id,
                 chunk_index=idx,
                 text=chunk_text,
@@ -218,13 +259,14 @@ class IngestionService:
 
         db.flush()
 
-        vectors = self.embedding.embed_documents([c.text for c in chunk_rows])
+        vectors = self.embedding.embed_documents([c.text for c in chunk_rows], llm_config=llm_config)
         index_records = []
         for c in chunk_rows:
             index_records.append(
                 {
                     "chunk_id": c.id,
                     "document_id": c.document_id,
+                    "user_id": user_id,
                     "text": c.text,
                     "title": document.title,
                     "source_url": document.source_url,
@@ -240,10 +282,17 @@ class IngestionService:
         except Exception:
             pass
 
-        enrich = self.enrichment.extract(text, source_type, title=file_name)
+        enrich = self.enrichment.extract(
+            text,
+            source_type,
+            title=file_name,
+            llm_config=llm_config,
+            run_ctx=LLMRunContext(db=db, user_id=user_id, trace_id=trace_id, endpoint="ingest_enrich"),
+        )
         event_rows: list[Event] = []
         for ev in enrich.get("events", []):
             event = Event(
+                user_id=user_id,
                 company_id=company.id if company else None,
                 document_id=document.id,
                 event_type=ev["event_type"],
@@ -278,6 +327,7 @@ class IngestionService:
     def _resolve_company(
         self,
         db: Session,
+        user_id: str,
         company_name: str | None,
         company_domain: str | None,
         source_url: str,
@@ -285,18 +335,22 @@ class IngestionService:
         domain = company_domain or self._domain_from_url(source_url)
 
         if domain:
-            existing = db.execute(select(Company).where(Company.domain == domain)).scalar_one_or_none()
+            existing = db.execute(
+                select(Company).where(Company.domain == domain, Company.user_id == user_id)
+            ).scalar_one_or_none()
             if existing:
                 return existing
 
         if company_name:
-            existing_by_name = db.execute(select(Company).where(Company.name == company_name)).scalar_one_or_none()
+            existing_by_name = db.execute(
+                select(Company).where(Company.name == company_name, Company.user_id == user_id)
+            ).scalar_one_or_none()
             if existing_by_name:
                 if domain and not existing_by_name.domain:
                     existing_by_name.domain = domain
                 return existing_by_name
 
-            company = Company(name=company_name, domain=domain, watchlist_tier=1)
+            company = Company(user_id=user_id, name=company_name, domain=domain, watchlist_tier=1)
             db.add(company)
             db.flush()
             return company

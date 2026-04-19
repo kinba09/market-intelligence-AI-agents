@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.models.entities import Chunk, Document
 from app.services.embedding_service import EmbeddingService
+from app.services.llm_config_service import RuntimeLLMConfig
 from app.services.text_utils import keyword_hits
 from app.storage.opensearch_store import OpenSearchStore
 from app.storage.qdrant_store import QdrantStore
@@ -35,13 +36,20 @@ class RetrievalService:
         self,
         db: Session,
         *,
+        user_id: str,
         question: str,
         filters: dict[str, Any],
         top_k: int,
+        llm_config: RuntimeLLMConfig | None = None,
     ) -> list[RetrievedChunk]:
-        bm25_hits = self.opensearch.search(question, filters=filters, limit=max(40, top_k * 4))
-        query_vec = self.embedding.embed_query(question)
-        vector_hits = self.qdrant.search(query_vec, filters=filters, limit=max(40, top_k * 4))
+        merged_filters = {
+            **filters,
+            "user_id": user_id,
+        }
+
+        bm25_hits = self.opensearch.search(question, filters=merged_filters, limit=max(40, top_k * 4))
+        query_vec = self.embedding.embed_query(question, llm_config=llm_config)
+        vector_hits = self.qdrant.search(query_vec, filters=merged_filters, limit=max(40, top_k * 4))
 
         fused = self._fuse(bm25_hits, vector_hits)
         if not fused:
@@ -49,7 +57,9 @@ class RetrievalService:
 
         top_ids = [chunk_id for chunk_id, _ in sorted(fused.items(), key=lambda x: x[1], reverse=True)[:120]]
         rows = db.execute(
-            select(Chunk, Document).join(Document, Chunk.document_id == Document.id).where(Chunk.id.in_(top_ids))
+            select(Chunk, Document)
+            .join(Document, Chunk.document_id == Document.id)
+            .where(Chunk.id.in_(top_ids), Chunk.user_id == user_id)
         ).all()
 
         row_map: dict[str, tuple[Chunk, Document]] = {chunk.id: (chunk, doc) for chunk, doc in rows}

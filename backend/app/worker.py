@@ -18,7 +18,7 @@ celery_app = Celery("market_intel", broker=settings.redis_url, backend=settings.
 
 
 @celery_app.task
-def ingest_url_task(url: str, source_type: str = "news") -> dict:
+def ingest_url_task(user_id: str, url: str, source_type: str = "news") -> dict:
     services = get_services()
     ingestion = IngestionService(
         object_store=services.object_store,
@@ -32,18 +32,23 @@ def ingest_url_task(url: str, source_type: str = "news") -> dict:
     req = IngestURLRequest(url=url, source_type=source_type)
     db = SessionLocal()
     try:
-        resp = asyncio.run(ingestion.ingest_url(db, req))
+        llm_cfg = services.llm_config.get_default_runtime_config(db, user_id)
+        resp = asyncio.run(ingestion.ingest_url(db, req, user_id=user_id, llm_config=llm_cfg))
         return resp.model_dump()
     finally:
         db.close()
 
 
 @celery_app.task
-def evaluate_alerts_task() -> dict:
+def evaluate_alerts_task(user_id: str) -> dict:
     services = get_services()
     db = SessionLocal()
     try:
-        events = db.execute(select(Event).order_by(Event.created_at.desc()).limit(200)).scalars().all()
+        events = (
+            db.execute(select(Event).where(Event.user_id == user_id).order_by(Event.created_at.desc()).limit(200))
+            .scalars()
+            .all()
+        )
         alerts = services.alerts.evaluate_and_create_alerts(db, events)
         db.commit()
         return {"alerts_created": len(alerts)}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | MarketIntel AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Manrope:wght@400;500;700;800&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body data-page="login">
+    <header class="topbar">
+      <div class="blob-nav">
+        <h1>MarketIntel AI</h1>
+        <div class="actions">
+          <a href="/">Home</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="auth-wrap">
+      <article class="panel auth-card">
+        <h2>Login</h2>
+        <label>Email <input id="loginEmail" type="email" placeholder="you@example.com" /></label>
+        <label>Password <input id="loginPassword" type="password" placeholder="********" /></label>
+        <button id="loginBtn">Login</button>
+      </article>
+
+      <article class="panel auth-card">
+        <h2>Create account</h2>
+        <label>Email <input id="registerEmail" type="email" placeholder="you@example.com" /></label>
+        <label>Password <input id="registerPassword" type="password" placeholder="min 8 chars" /></label>
+        <button id="registerBtn">Register</button>
+      </article>
+
+      <article class="panel auth-card">
+        <h3>After login</h3>
+        <p>
+          Add your own free Gemini key and model in Settings. You can also add other provider keys with model names
+          supported by LiteLLM.
+        </p>
+        <pre id="authStatus">Ready.</pre>
+      </article>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

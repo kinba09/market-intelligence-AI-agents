@@ -33,6 +33,7 @@ node_modules/
 *.log
 *.pid
 *.out
+logs/
 
 # Local data/state
 *.sqlite

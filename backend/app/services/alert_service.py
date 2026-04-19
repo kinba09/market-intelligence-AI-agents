@@ -25,6 +25,7 @@ class AlertService:
             # cooldown to prevent duplicate alert storms
             existing = db.execute(
                 select(Alert).where(
+                    Alert.user_id == event.user_id,
                     Alert.company_id == event.company_id,
                     Alert.alert_type == event.event_type,
                     Alert.created_at >= cutoff,
@@ -34,6 +35,7 @@ class AlertService:
                 continue
 
             alert = Alert(
+                user_id=event.user_id,
                 company_id=event.company_id,
                 event_id=event.id,
                 alert_type=event.event_type,

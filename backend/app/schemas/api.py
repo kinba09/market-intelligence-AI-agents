@@ -3,7 +3,90 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, EmailStr, Field, HttpUrl
+
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class UserOut(BaseModel):
+    user_id: str
+    email: EmailStr
+
+
+class LLMKeyUpsertRequest(BaseModel):
+    label: str = Field(default="default", max_length=64)
+    provider: str = Field(default="gemini", max_length=32)
+    model_name: str = Field(default="gemini-2.0-flash", max_length=128)
+    api_key: str = Field(min_length=8)
+    base_url: str | None = None
+    is_default: bool = True
+
+
+class LLMKeyOut(BaseModel):
+    key_id: str
+    label: str
+    provider: str
+    model_name: str
+    base_url: str | None
+    is_default: bool
+    masked_api_key: str
+
+
+class SourceMonitorCreateRequest(BaseModel):
+    label: str = Field(max_length=120)
+    source_type: str = Field(pattern="^(url|rss)$")
+    source_url: HttpUrl
+    ingest_source_type: str = Field(default="news", max_length=50)
+    enabled: bool = True
+    frequency_hours: int = Field(default=24, ge=1, le=168)
+
+
+class SourceMonitorOut(BaseModel):
+    monitor_id: str
+    label: str
+    source_type: str
+    source_url: str
+    ingest_source_type: str
+    enabled: bool
+    frequency_hours: int
+    last_run_at: datetime | None
+    next_run_at: datetime
+    last_status: str | None
+    last_error: str | None
+
+
+class WorkflowRunOut(BaseModel):
+    run_id: str
+    workflow_name: str
+    status: str
+    started_at: datetime
+    ended_at: datetime | None
+    details: dict[str, Any]
+
+
+class LLMRunOut(BaseModel):
+    run_id: str
+    trace_id: str | None
+    endpoint: str | None
+    provider: str
+    model_name: str
+    latency_ms: int
+    success: bool
+    error: str | None
+    created_at: datetime
 
 
 class IngestURLRequest(BaseModel):
@@ -48,6 +131,7 @@ class AskResponse(BaseModel):
     confidence: float
     citations: list[Citation]
     trace: dict[str, Any]
+    trace_id: str
 
 
 class CompanyUpsertRequest(BaseModel):
@@ -95,3 +179,4 @@ class CompetitorReportRequest(BaseModel):
 class CompetitorReportResponse(BaseModel):
     report_markdown: str
     generated_at: datetime
+    trace_id: str
